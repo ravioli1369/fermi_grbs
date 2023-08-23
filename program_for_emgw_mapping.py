@@ -452,7 +452,10 @@ if __name__ == '__main__':
     parser.add_argument(
         "-prob_mode", help="Enter totmass for total mass, maxmass for maximum galaxy mass, enter normal otherwise", default='normal')
     parser.add_argument(
-        "-time", help="Enter time of observation in UTC", default=Time.now()
+        "-time", help="Enter time of observation in UTC", default=None
+    )
+    parser.add_argument(
+        "-trig_no", help="Enter trigger number", default=None
     )
     
     args = parser.parse_args()
@@ -460,13 +463,18 @@ if __name__ == '__main__':
 
     file = args.input_file
     output_name = file + "_scheduled.csv"
+    time = args.time
+    if time is not None:
+        time = Time(datetime.datetime.strptime(time, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
+    else:
+        time = Time.now()
     print('processing map')
     if args.type == 's':
         coverage = save_sear_table(file, args.config_tile_file,
-                        outfile=output_name, mode=args.prob_mode, time=args.time)
+                        outfile=output_name, mode=args.prob_mode, time=time)
     else:
         coverage = save_enar_table(file, args.config_tile_file,
-                        outfile=output_name, mode=args.prob_mode, time=args.time)
+                        outfile=output_name, mode=args.prob_mode, time=time)
     with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
-        f.write(f"{os.path.basename(file)},{str(coverage)}\n")
+        f.write(f"{os.path.basename(file)},{args.trig_no},{time},{str(coverage)}\n")
     print('output file : ', output_name)
