@@ -2,6 +2,8 @@ import os
 import time
 import requests
 import pandas as pd
+from astropy.time import Time
+from datetime import datetime
 
 def get_time_radius(url):
     r = requests.get(url).text
@@ -24,11 +26,15 @@ def tiling():
         else:
             url = f"{basepath}/{trigger}.fermi"
             date, radius = get_time_radius(url)
+            time = Time(datetime.datetime.strptime(time, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
             tile_cmd = f"python3 program_for_emgw_mapping.py \
-                -input_file /home/ravioli/astro/git/fermi_grbs/data/glg_healpix_all_{name}.fit \
+                -input_file {in_file} \
                 -time '{date}' -trig_no {trigger} \
                 -radius {radius}"
-            r = os.system(tile_cmd)
+            r = int(os.system(tile_cmd))
+            if r != 0:
+                print("GRB BELOW -32.5 DECLINATION")
+                f.write(f"{os.path.basename(in_file)},{trigger},{time},{radius},NOT VISIBLE\n")
             print(name, trigger, date, radius, r)
 
 if __name__ == "__main__":
