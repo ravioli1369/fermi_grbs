@@ -26,7 +26,7 @@ def tiling():
         else:
             url = f"{basepath}/{trigger}.fermi"
             date, radius = get_time_radius(url)
-            time = Time(datetime.strptime(time, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
+            time = Time(datetime.strptime(date, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
             tile_cmd = f"python3 program_for_emgw_mapping.py \
                 -input_file {in_file} \
                 -time '{date}' -trig_no {trigger} \
