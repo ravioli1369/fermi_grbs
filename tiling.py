@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 import pandas as pd
 
@@ -17,7 +18,7 @@ def tiling():
         in_file = f"/home/ravioli/astro/git/fermi_grbs/data/glg_healpix_all_{name}.fit"
         if healpix != 0:
             with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
-                f.write(f"{None},{trigger},{None},{None}\n")
+                f.write(f"{None},{trigger},{None},{None},{None}\n")
             f.close()
             print("NO HEALPIX", name, trigger)
         else:
@@ -25,9 +26,14 @@ def tiling():
             date, radius = get_time_radius(url)
             tile_cmd = f"python3 program_for_emgw_mapping.py \
                 -input_file /home/ravioli/astro/git/fermi_grbs/data/glg_healpix_all_{name}.fit \
-                -time '{date}' -trig_no {trigger}"
+                -time '{date}' -trig_no {trigger} \
+                -radius {radius}"
             r = os.system(tile_cmd)
             print(name, trigger, date, radius, r)
 
 if __name__ == "__main__":
+    t = time.time()
     tiling()
+    print("######################################\n######################################\n")
+    print("Total time taken: ", time.time()-t)
+    print("######################################\n######################################\n")
