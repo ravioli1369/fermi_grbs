@@ -21,7 +21,6 @@ def tiling():
         if healpix != 0:
             with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
                 f.write(f"{None},{trigger},{None},{None},{None}\n")
-            f.close()
             print("NO HEALPIX", name, trigger)
         else:
             url = f"{basepath}/{trigger}.fermi"
@@ -34,7 +33,8 @@ def tiling():
             r = int(os.system(tile_cmd))
             if r != 0:
                 print("GRB BELOW -32.5 DECLINATION")
-                f.write(f"{os.path.basename(in_file)},{trigger},{time},{radius},NOT VISIBLE\n")
+                with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
+                    f.write(f"{os.path.basename(in_file)},{trigger},{time},{radius},NOT VISIBLE\n")
             print(name, trigger, date, radius, r)
 
 if __name__ == "__main__":
