@@ -457,6 +457,9 @@ if __name__ == '__main__':
     parser.add_argument(
         "-trig_no", help="Enter trigger number", default=None
     )
+    parser.add_argument(
+        "-radius", help="Enter radius of error circle", default=None
+    )
     
     args = parser.parse_args()
     
@@ -468,7 +471,7 @@ if __name__ == '__main__':
         time = Time(datetime.datetime.strptime(time, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
     else:
         time = Time.now()
-    print('processing map')
+    print(f'processing map {os.path.basename(file)} at {time}')
     if args.type == 's':
         coverage = save_sear_table(file, args.config_tile_file,
                         outfile=output_name, mode=args.prob_mode, time=time)
@@ -476,5 +479,6 @@ if __name__ == '__main__':
         coverage = save_enar_table(file, args.config_tile_file,
                         outfile=output_name, mode=args.prob_mode, time=time)
     with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
-        f.write(f"{os.path.basename(file)},{args.trig_no},{time},{str(coverage)}\n")
+        f.write(f"{os.path.basename(file)},{args.trig_no},{time},{args.radius},{str(coverage)}\n")
+    f.close()
     print('output file : ', output_name)
