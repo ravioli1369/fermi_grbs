@@ -1,4 +1,4 @@
-#Statistical Analysis of Meter Class Telescopes On Fermi GRBs
+# Statistical Analysis of Meter Class Telescopes On Fermi GRBs
 
 ## Getting Started
 This repository contains the code used to perform the statistical analysis of the meter class telescopes on Fermi GRBs. More specifically, if a meter class telescope such as the GROWTH India Telescope were to perform follow up oberservations on Fermi GBM triggers then **insert outcome here**
