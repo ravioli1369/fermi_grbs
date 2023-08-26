@@ -24,8 +24,10 @@ def tiling():
             print("NO HEALPIX", name, trigger)
         else:
             url = f"{basepath}/{trigger}.fermi"
-            date, radius = get_time_radius(url)
-            time = Time(datetime.strptime(date, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
+            dateradius = pd.DataFrame(pd.read_csv("/home/ravioli/astro/git/fermi_grbs/coverage_old.csv"))
+            date, radius = dateradius.loc[dateradius['trig_no'] == trigger, ['time', 'radius']].values[0]
+            # date, radius = get_time_radius(url)
+            # time = Time(datetime.strptime(date, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
             tile_cmd = f"python3 program_for_emgw_mapping.py \
                 -input_file {in_file} \
                 -time '{date}' -trig_no {trigger} \
@@ -34,7 +36,7 @@ def tiling():
             if r != 0:
                 print("GRB BELOW -32.5 DECLINATION")
                 with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
-                    f.write(f"{os.path.basename(in_file)},{trigger},{time},{radius},NOT VISIBLE\n")
+                    f.write(f"{os.path.basename(in_file)},{trigger},{date},{radius},NOT VISIBLE\n")
             print(name, trigger, date, radius, r)
 
 if __name__ == "__main__":

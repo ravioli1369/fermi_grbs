@@ -468,7 +468,8 @@ if __name__ == '__main__':
     output_name = file + "_scheduled.csv"
     time = args.time
     if time is not None:
-        time = Time(datetime.datetime.strptime(time, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
+        # time = Time(datetime.datetime.strptime(time, "%a %d %b %y %H:%M:%S"), format="datetime", scale="utc")
+        time = Time(datetime.datetime.strptime(time, "%Y-%m-%d %H:%M:%S"), format="datetime", scale="utc")
     else:
         time = Time.now()
     print(f'processing map {os.path.basename(file)} at {time}')
