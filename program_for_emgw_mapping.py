@@ -93,9 +93,9 @@ def get_obs_times(time, observatory=astroplan.Observer.at_site("iao"),
     Make a list of observing times
     """
     if start_time is None:
-        start_time = observatory.twilight_evening_civil(time, 'next')
+        start_time = observatory.twilight_evening_astronomical(time, 'next')
     if end_time is None:
-        end_time = observatory.twilight_morning_civil(start_time, 'next')
+        end_time = observatory.twilight_morning_astronomical(start_time, 'next')
     return np.arange(start_time, end_time, exptime)
 
 
@@ -153,7 +153,7 @@ def get_sear_schedule(filename, tileno, legalra, legaldec, mode, config_tile_fil
     toptiles = get_top_tiles(legalra, legaldec, for_sum, frac=0.90)
     obs_times = get_obs_times(time)
     iao = Observer.at_site("iao")
-    if time > iao.twilight_evening_civil(time, 'nearest'):
+    if time > iao.twilight_evening_astronomical(time, 'nearest') and time < iao.twilight_morning_astronomical(time, 'nearest'):
         obs_times = get_obs_times(time, start_time=time)
     iao = Observer.at_site("iao")
     R = np.zeros((len(legalra), len(obs_times)))
@@ -216,7 +216,7 @@ def get_enar_schedule(filename, tileno, legalra, legaldec, mode, config_tile_fil
 
     obs_times = get_obs_times(time)
     iao = Observer.at_site("iao")
-    if time > iao.twilight_evening_civil(time, 'nearest'):
+    if time > iao.twilight_evening_astronomical(time, 'nearest') and time < iao.twilight_morning_astronomical(time, 'nearest'):
         obs_times = get_obs_times(time, start_time=time)
 
     R = np.zeros((len(legalra), len(obs_times)))
