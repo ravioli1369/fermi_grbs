@@ -1,5 +1,4 @@
 healpix,trig_no,time,radius,coverage
-
 None,504931642,None,None,None
 None,504953918,None,None,None
 None,505437234,None,None,None
@@ -334,6 +333,6 @@ None,536600992,None,None,None
 None,536638157,None,None,None
 None,537287764,None,None,None
 None,537392045,None,None,None
-glg_healpix_all_bn180112842.fit,537480753,2018-01-12 20:21:50,6.67,0.08313239
-glg_healpix_all_bn180113011.fit,537495365,2018-01-13 00:25:13,1.21,0.14667225
-glg_healpix_all_bn180113116.fit,537504431,2018-01-13 02:56:30,1.00,0.3802111
+glg_healpix_all_bn180112842.fit,537480753,2018-01-12 20:21:50,6.67,0.043232117
+glg_healpix_all_bn180113011.fit,537495365,2018-01-13 00:25:13,1.21,0.11265792
+glg_healpix_all_bn180113116.fit,537504431,2018-01-13 02:56:30,1.00,0.12148734
