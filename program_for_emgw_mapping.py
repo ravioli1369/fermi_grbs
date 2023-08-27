@@ -43,6 +43,25 @@ def grid2targets(ra, dec):
     return target_list
 
 
+def get_risetime(file, obs_times):
+    """
+    Get the rise time of the target
+    """
+    hpmap = read_sky_map(file)[0]
+    sortorder = np.argsort(hpmap)[::-1]
+    ra_tiles, dec_tiles = hp.pix2ang(128,sortorder[:np.where(np.cumsum(hpmap[sortorder])/np.sum(hpmap)>0.9)[0][0]], lonlat=True)
+    obs_times = Time(np.array([i.jd for i in obs_times]), format='jd')
+    tile_coords = SkyCoord(ra=ra_tiles, dec=dec_tiles, unit=u.deg)
+    iao = Observer.at_site("iao")
+    max_alt = []
+    for time in obs_times:
+        aa = iao.altaz(time)
+        target_altaz = tile_coords.transform_to(aa)
+        max_alt.append(np.max(target_altaz.alt.value))
+    max_alt = np.array(max_alt)
+    return obs_times[np.where(max_alt>20)]
+
+
 def get_probabilities(skymap, ra, dec, mode, config_tile_file, radius=0.35*u.deg):
     """
     Compute the probabilities covered in a grid of ra, dec with radius
@@ -87,7 +106,7 @@ def get_probabilities(skymap, ra, dec, mode, config_tile_file, radius=0.35*u.deg
     return probabilities, prob_for_sum
 
 
-def get_obs_times(time, observatory=astroplan.Observer.at_site("iao"),
+def get_obs_times(file, time, observatory=astroplan.Observer.at_site("iao"),
                   exptime=5*u.min, start_time=None, end_time=None):
     """
     Make a list of observing times
@@ -99,7 +118,12 @@ def get_obs_times(time, observatory=astroplan.Observer.at_site("iao"),
             start_time = observatory.twilight_evening_astronomical(time, 'next')
     if end_time is None:
         end_time = observatory.twilight_morning_astronomical(start_time, 'next')
-    return np.arange(start_time, end_time, exptime)
+    rise_time = get_risetime(file, np.arange(start_time, end_time, exptime))
+    if len(rise_time) == 0:
+        return [0]
+    else:
+        start_time = rise_time[0]
+        return np.arange(start_time, end_time, exptime)
 
 
 def get_top_tiles(ra, dec, probabilities, frac=0.90):
@@ -154,10 +178,7 @@ def get_sear_schedule(filename, tileno, legalra, legaldec, mode, config_tile_fil
     probabilities, for_sum = get_probabilities(
         skymap, legalra, legaldec, mode, config_tile_file)
     toptiles = get_top_tiles(legalra, legaldec, for_sum, frac=0.90)
-    obs_times = get_obs_times(time)
-    iao = Observer.at_site("iao")
-    if time > iao.twilight_evening_astronomical(time, 'nearest') and time < iao.twilight_morning_astronomical(time, 'nearest'):
-        obs_times = get_obs_times(time, start_time=time)
+    obs_times = get_obs_times(filename, time)
     iao = Observer.at_site("iao")
     R = np.zeros((len(legalra), len(obs_times)))
     S = np.zeros((len(legalra), len(obs_times)))
@@ -217,7 +238,7 @@ def get_enar_schedule(filename, tileno, legalra, legaldec, mode, config_tile_fil
 
     toptiles = get_top_tiles(legalra, legaldec, for_sum, frac=0.90)
 
-    obs_times = get_obs_times(time)
+    obs_times = get_obs_times(filename, time)
 
     R = np.zeros((len(legalra), len(obs_times)))
     S = np.zeros((len(legalra), len(obs_times)))
@@ -298,12 +319,12 @@ def get_enar_schedule(filename, tileno, legalra, legaldec, mode, config_tile_fil
     return np.array(obs_schedule), probabilities[obs_schedule], np.array(riseset)
 
 
-def save_sear_table(infile, config_tile_file, outfile, mode, time):
+def save_sear_table(infile, config_tile_file, outfile, mode, time, filename):
     """
     Filename should include extension.
     """
     # sum_prob = 0
-    obs_times = get_obs_times(time)
+    obs_times = get_obs_times(filename, time)
     f = pd.read_csv(config_tile_file)
     f.reset_index(drop=True, inplace=True)
     tileno = np.array([numb for numb in range(len(f))])
@@ -367,13 +388,13 @@ def save_sear_table(infile, config_tile_file, outfile, mode, time):
     return coverage
 
 
-def save_enar_table(infile, config_tile_file, outfile, mode, time):
+def save_enar_table(infile, config_tile_file, outfile, mode, time, filename):
     """
     Filename should include extension.
     """
     # sum_prob = 0
 
-    obs_times = get_obs_times(time)
+    obs_times = get_obs_times(filename, time)
     f = pd.read_csv(config_tile_file)
     tileno = np.array([numb for numb in range(len(f))])
     lra = np.array(f['RA_Center'])*u.deg
@@ -473,13 +494,20 @@ if __name__ == '__main__':
     else:
         time = Time.now()
     print(f'processing map {os.path.basename(file)} at {time}')
-    if args.type == 's':
-        coverage = save_sear_table(file, args.config_tile_file,
-                        outfile=output_name, mode=args.prob_mode, time=time)
+    
+    obs_times = get_obs_times(file, time)
+    
+    if obs_times[0] == 0:
+        print('No observation possible')
+        with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
+            f.write(f"{os.path.basename(file)},{args.trig_no},{time},{args.radius},DID NOT RISE\n")
     else:
-        coverage = save_enar_table(file, args.config_tile_file,
-                        outfile=output_name, mode=args.prob_mode, time=time)
-    with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
-        f.write(f"{os.path.basename(file)},{args.trig_no},{time},{args.radius},{str(coverage)}\n")
-    f.close()
-    print('output file : ', output_name)
+        if args.type == 's':
+            coverage = save_sear_table(file, args.config_tile_file,
+                            outfile=output_name, mode=args.prob_mode, time=time, filename=file)
+        else:
+            coverage = save_enar_table(file, args.config_tile_file,
+                            outfile=output_name, mode=args.prob_mode, time=time, filename=file)
+        with open("/home/ravioli/astro/git/fermi_grbs/coverage.csv", "a") as f:
+            f.write(f"{os.path.basename(file)},{args.trig_no},{time},{args.radius},{str(coverage)}\n")
+        print('output file : ', output_name)
